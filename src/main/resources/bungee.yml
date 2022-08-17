@@ -1,0 +1,3 @@
+name: AntiPopup-Via
+version: '${version}'
+main: com.github.kaspiandev.antipopupvia.AntiPopupVia
