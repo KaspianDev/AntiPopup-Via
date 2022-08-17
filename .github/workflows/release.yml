@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    if: "startsWith(github.event.head_commit.message, '🔼')"
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2.4.2
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3.4.1
+      with:
+        java-version: 17
+        distribution: temurin
+          
+    - name: Make gradlew executable
+      run: chmod +x ./gradlew
+          
+    - name: Build artifacts
+      run: ./gradlew build
+
+    - name: Set outputs
+      id: vars
+      run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+
+    - uses: avakar/tag-and-release@v1
+      id: release
+      with:
+        tag_name: ${{ steps.vars.outputs.sha_short }}
+        draft: true
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+        
+    - name: Upload artifacts & release assets
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
+      with:
+        path: build/libs/*.jar
+        release-upload-url: ${{ steps.release.outputs.upload_url }}
+        upload-release-files: true
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
